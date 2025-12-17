@@ -15,14 +15,14 @@ async fn main() -> Result<()> {
         host: "localhost".into(),
         port: 5432,
         username: "app".into(),
-        password: "password".into(),
+        password: "passwd".into(),
         database: "app".into(),
     };
     let conn_pool = connect_database_with(database_cfg);
 
     let app = Router::new()
         .route("/health", get(health_check))
-        .route("/health_db", get(health_check_db))
+        .route("/health/db", get(health_check_db))
         .with_state(conn_pool);
     let addr = SocketAddrV4::new(Ipv4Addr::LOCALHOST.into(), 8080);
     let listener = TcpListener::bind(addr).await?;
