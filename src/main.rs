@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
         .route("/health", get(health_check))
         .route("/health/db", get(health_check_db))
         .with_state(conn_pool);
-    let addr = SocketAddrV4::new(Ipv4Addr::LOCALHOST.into(), 8080);
+    let addr = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 8080);
     let listener = TcpListener::bind(addr).await?;
 
     println!("Listening on {}", addr);
