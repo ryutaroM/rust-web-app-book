@@ -1,3 +1,7 @@
 {
-  "cSpell.words": ["rstest"]
+  "cSpell.words": [
+    "rstest",
+    "serde",
+    "thiserror"
+  ]
 }
