@@ -3,5 +3,8 @@
     "rstest",
     "serde",
     "thiserror"
-  ]
+  ],
+  "rust-analyzer.server.extraEnv": {
+    "DATABASE_URL": "postgresql://localhost:5432/app?user=app&password=passwd",
+  },
 }
