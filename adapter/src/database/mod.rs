@@ -15,7 +15,7 @@ fn make_pg_connect_options(cfg: &DatabaseConfig) -> PgConnectOptions {
 pub struct ConnectionPool(PgPool);
 
 impl ConnectionPool {
-    pub fn inner_self(&self) -> &PgPool {
+    pub fn inner_ref(&self) -> &PgPool {
         &self.0
     }
 }
