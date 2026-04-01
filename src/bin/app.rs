@@ -1,16 +1,46 @@
 use std::net::{Ipv4Addr, SocketAddr};
 
 use adapter::database::connect_database_with;
+use anyhow::Context;
 use anyhow::{Error, Result};
 use api::route::{book::build_book_routes, health::build_health_check_routers};
 use axum::Router;
 use registry::AppRegistry;
 use shared::config::AppConfig;
+use shared::env::{which, Environment};
 use tokio::net::TcpListener;
+use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
+use tower_http::LatencyUnit;
+use tracing::Level;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    init_logger()?;
     bootstrap().await
+}
+
+fn init_logger() -> Result<()> {
+    let log_level = match which() {
+        Environment::Development => "debug",
+        Environment::Production => "info",
+    };
+
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| log_level.into());
+
+    let subscriber = tracing_subscriber::fmt::layer()
+        .with_file(true)
+        .with_line_number(true)
+        .with_target(false);
+
+    tracing_subscriber::registry()
+        .with(subscriber)
+        .with(env_filter)
+        .try_init()?;
+
+    Ok(())
 }
 
 async fn bootstrap() -> Result<()> {
