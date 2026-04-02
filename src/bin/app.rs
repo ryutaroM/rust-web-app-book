@@ -50,10 +50,30 @@ async fn bootstrap() -> Result<()> {
     let app = Router::new()
         .merge(build_health_check_routers())
         .merge(build_book_routes())
+        .layer(cors())
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
+                .on_request(DefaultOnRequest::new().level(Level::INFO))
+                .on_response(
+                    DefaultOnResponse::new()
+                        .level(Level::INFO)
+                        .latency_unit(LatencyUnit::Millis),
+                ),
+        )
         .with_state(registry);
 
     let addr = SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 8080);
-    let listener = TcpListener::bind(&addr).await?;
-    println!("Listening on {}", addr);
-    axum::serve(listener, app).await.map_err(Error::from)
+    let listener = tokio::new::TcpListener::bind(&addr).await?;
+    tracing::info!("Listening on {}", addr);
+    axum::serve(listener, app)
+        .await
+        .context("Unexpected error happened in server")
+        .inspect_err(|e| {
+            tracing::error!(
+                error.cause_chain = ?e,
+                error.message = %e,
+                "Unexpected error"
+            )
+        })
 }
