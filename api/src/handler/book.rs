@@ -1,5 +1,3 @@
-use std::any;
-
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -7,6 +5,8 @@ use axum::{
     Json,
 };
 use registry::AppRegistry;
+use shared::error::{AppError, AppResult};
+use std::any;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -15,7 +15,7 @@ use crate::model::book::{BookResponse, CreateBookRequest};
 pub async fn register_book(
     State(registry): State<AppRegistry>,
     Json(req): Json<CreateBookRequest>,
-) -> Result<StatusCode, AppError> {
+) -> AppResult<StatusCode> {
     registry
         .book_repository()
         .create(req.into())
@@ -26,7 +26,7 @@ pub async fn register_book(
 
 pub async fn show_book_list(
     State(registry): State<AppRegistry>,
-) -> Result<Json<Vec<BookResponse>>, AppError> {
+) -> AppResult<Json<Vec<BookResponse>>> {
     registry
         .book_repository()
         .find_all()
@@ -39,14 +39,15 @@ pub async fn show_book_list(
 pub async fn show_book(
     Path(book_id): Path<Uuid>,
     State(registry): State<AppRegistry>,
-) -> Result<Json<BookResponse>, AppError> {
+) -> AppResult<Json<BookResponse>> {
     registry
         .book_repository()
         .find_by_id(book_id)
         .await
         .and_then(|bc| match bc {
             Some(bc) => Ok(Json(bc.into())),
-            None => Err(anyhow::anyhow!("The specific book was not found.")),
+            None => Err(AppError::EntityNotFound(
+                "The specific book was not found.".into(),
+            )),
         })
-        .map_err(AppError::from)
 }
